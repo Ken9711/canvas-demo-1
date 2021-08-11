@@ -14,36 +14,57 @@
     <canvas id="canvas" width="100" height="100"></canvas>
     <script>
         let canvas = document.getElementById("canvas");
-        canvas.width = document.documentElement.clientWidth
-        canvas.height = document.documentElement.clientHeight
-        let ctx = canvas.getContext("2d");
+        canvas.width = document.documentElement.clientWidth;
+        canvas.height = document.documentElement.clientHeight;
+        let ctx = canvas.getContext("2d");//获取该canvas的2D绘图环境对象
+        ctx.strokeStyle = "black";  // 设置边边颜色
+        ctx.fillStyle = "black";    // 设置填充颜色
+        ctx.lineWidth = 8;  // 设置线条宽度
+        ctx.lineCap = "round";   //设置线条开始与结尾的线帽样式(可以理解为线条转弯时连接处的的样式)
 
-        let painting = false
+        let painting = false;   // 默认不处于绘画状态.(相关与开关，用来判断鼠标是否按下)
+        let last;   // 上一次触摸
 
-
-        ctx.fillStyle = "black";
-        ctx.strokeStyle = 'none'
-
-        canvas.onmousedown = () => {
-            painting = true
-        }
-
-        canvas.onmousemove = (e) => {
-            if (painting === true) {
-                ctx.beginPath();
-                ctx.arc(e.clientX, e.clientY, 10, 0, 2 * Math.PI);
-                ctx.stroke();
-                ctx.fill();
-            } else {
-                console.log('什么都不做')
+        var isTouchDevice = 'ontouchstart' in document.documentElement;     //  判断是触摸设备还是鼠标点击设备.
+        if (isTouchDevice) {
+            canvas.ontouchstart = (e) => {  // 第一次触摸事件(相当与手指第一次触摸屏幕)
+                console.log(e)  // 这里的e接收的是TouchEvent事件传过来的参数。
+                let x = e.touches[0].clientX;   // 将触摸时的x坐标位置赋值给x
+                let y = e.touches[0].clientY;   // 将触摸时的y坐标位置赋值给y
+                last = [x, y];  // 第一次触摸时的坐标以数组的形式赋值给last。
             }
+
+            canvas.ontouchmove = (e) => {   // 移动手指时
+                let x = e.touches[0].clientX;
+                let y = e.touches[0].clientY;
+                drawLine(last[0], last[1], x, y);   // 调用drawLine函数，让last(上一次坐标位置)和现时位置之间成一条直线。
+                last = [x, y];  // 连成一条直线之后，继续将最新的x, y坐标赋值给last数组。
+            }
+        } else {    // 如果不是触摸设备那么就是电脑设备，这是使用鼠标事件
+            canvas.onmousedown = (e) => {
+                painting = true;    //当鼠标按下时，开启绘画状态
+                last = [e.clientX, e.clientY];
+            }
+
+            canvas.onmousemove = (e) => {   // 鼠标移动时
+                if (painting === true) {
+                    drawLine(last[0], last[1], e.clientX, e.clientY);   // 和上面的触摸设备同理
+                    last = [e.clientX, e.clientY];
+                }
+            }
+
+            canvas.onmouseup = () => {
+                painting = false;   //当鼠标松开时，切换到关闭绘画状态。
+            }
+
         }
 
-        canvas.onmouseup = () => {
-            painting = false
+        function drawLine(x1, y1, x2, y2) {     // 封装一个函数，用来画直线用。
+            ctx.beginPath();    // 表示新开一条直线
+            ctx.moveTo(x1, y1);     // 开始时的坐标
+            ctx.lineTo(x2, y2);     // 后一个点的坐标
+            ctx.stroke();
         }
-
-
     </script>
 </body>
 
